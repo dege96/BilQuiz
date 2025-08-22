@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, RotateCcw, Home, Trophy } from "lucide-react";
+import { ArrowRight, RotateCcw, Home, Trophy, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -30,6 +30,8 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
   const [readerIndex, setReaderIndex] = useState(0);
   const [gameId, setGameId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [showReaderAnnouncement, setShowReaderAnnouncement] = useState(true);
 
   // Load capitals and initialize game
   useEffect(() => {
@@ -124,18 +126,34 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
   const nextQuestion = () => {
     if (capitals.length === 0) return;
     
+    const newQuestionCount = questionCount + 1;
+    setQuestionCount(newQuestionCount);
+    
+    // Check if we need to change reader (every 3 questions)
+    if (newQuestionCount % 3 === 0) {
+      setReaderIndex((prev) => (prev + 1) % teams.length);
+      setShowReaderAnnouncement(true);
+      return;
+    }
+    
     // Get next random question
     const randomCapital = capitals[Math.floor(Math.random() * capitals.length)];
     setCurrentQuestion(randomCapital);
-    
-    // Rotate reader
-    setReaderIndex((prev) => (prev + 1) % teams.length);
+  };
+
+  const continueAfterAnnouncement = () => {
+    setShowReaderAnnouncement(false);
+    // Get next random question
+    const randomCapital = capitals[Math.floor(Math.random() * capitals.length)];
+    setCurrentQuestion(randomCapital);
   };
 
   const resetGame = async () => {
     const resetTeams = teams.map(team => ({ ...team, score: 0 }));
     setTeams(resetTeams);
     setReaderIndex(0);
+    setQuestionCount(0);
+    setShowReaderAnnouncement(true);
 
     // Reset scores in database
     if (gameId) {
@@ -172,8 +190,27 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
   }
 
   const currentReader = teams[readerIndex];
-  const maxScore = Math.max(...teams.map(t => t.score));
-  const winners = teams.filter(t => t.score === maxScore && maxScore > 0);
+
+  // Show reader announcement screen
+  if (showReaderAnnouncement) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary via-primary-glow to-secondary p-4">
+        <div className="max-w-4xl mx-auto pt-8 flex items-center justify-center min-h-[80vh]">
+          <Card className="p-12 bg-card/95 backdrop-blur-sm shadow-2xl text-center">
+            <h2 className="text-5xl font-bold text-foreground mb-8">
+              {currentReader.name} är läsare
+            </h2>
+            <Button
+              onClick={continueAfterAnnouncement}
+              className="h-16 px-12 text-xl bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary font-semibold"
+            >
+              Fortsätt
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary-glow to-secondary p-4">
@@ -184,7 +221,7 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
             {teams.map((team) => (
               <div
                 key={team.id}
-                className={`px-4 py-2 rounded-lg border-2 ${
+                className={`px-4 py-2 rounded-lg border-2 relative ${
                   team.id === currentReader.id
                     ? 'bg-muted border-accent text-foreground'
                     : 'bg-gradient-to-r from-muted to-muted/50 border-border text-foreground'
@@ -192,7 +229,16 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
               >
                 <div className="text-center">
                   <div className="font-bold text-lg">{team.name}</div>
-                  <div className="text-2xl font-bold text-primary">{team.score}</div>
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="text-2xl font-bold text-primary">{team.score}</div>
+                    <Button
+                      size="sm"
+                      onClick={() => givePointToTeam(team.id)}
+                      className="w-8 h-8 p-0 bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/80 hover:to-secondary"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                   {team.id === currentReader.id && (
                     <div className="text-xs text-muted-foreground">LÄSARE</div>
                   )}
@@ -200,18 +246,6 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
               </div>
             ))}
           </div>
-          
-          {winners.length > 0 && (
-            <div className="text-center mt-4 p-3 bg-gradient-to-r from-accent to-accent/80 rounded-lg">
-              <Trophy className="w-6 h-6 inline-block mr-2 text-white" />
-              <span className="text-white font-bold">
-                {winners.length === 1 
-                  ? `${winners[0].name} leder med ${maxScore} poäng!`
-                  : `Oavgjort med ${maxScore} poäng: ${winners.map(w => w.name).join(', ')}`
-                }
-              </span>
-            </div>
-          )}
         </Card>
 
         {/* Current Reader */}
