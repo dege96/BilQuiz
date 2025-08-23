@@ -121,6 +121,23 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
         console.error('Error updating score:', error);
       }
     }
+
+    // Advance question counter and handle reader changes like nextQuestion
+    if (capitals.length === 0) return;
+    
+    const newQuestionCount = questionCount + 1;
+    setQuestionCount(newQuestionCount);
+    
+    // Check if we need to change reader (every 3 questions)
+    if (newQuestionCount % 3 === 0) {
+      setReaderIndex((prev) => (prev + 1) % teams.length);
+      setShowReaderAnnouncement(true);
+      return;
+    }
+    
+    // Get next random question
+    const randomCapital = capitals[Math.floor(Math.random() * capitals.length)];
+    setCurrentQuestion(randomCapital);
   };
 
   const nextQuestion = () => {
@@ -217,6 +234,7 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
       <div className="max-w-4xl mx-auto pt-8">
         {/* Scoreboard */}
         <Card className="p-4 mb-6 bg-card/95 backdrop-blur-sm shadow-lg">
+          <h3 className="text-xl font-bold text-center mb-4 text-foreground">Poäng</h3>
           <div className="flex flex-wrap gap-3 justify-center">
             {teams.map((team) => (
               <div
@@ -272,30 +290,6 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
             </div>
           </Card>
         )}
-
-        {/* Team Buttons */}
-        <Card className="p-6 mb-6 bg-card/95 backdrop-blur-sm">
-          <h3 className="text-xl font-bold text-center mb-4 text-foreground">Ge poäng till:</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {teams.map((team) => (
-              <Button
-                key={team.id}
-                onClick={() => givePointToTeam(team.id)}
-                disabled={team.id === currentReader.id}
-                className={`h-16 text-lg font-semibold ${
-                  team.id === currentReader.id
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-gradient-to-r from-secondary to-secondary/80 hover:from-secondary/80 hover:to-secondary text-secondary-foreground hover:shadow-lg transition-all duration-300 hover:scale-105'
-                }`}
-              >
-                {team.name}
-                {team.id === currentReader.id && (
-                  <span className="ml-2 text-sm">(Läsare)</span>
-                )}
-              </Button>
-            ))}
-          </div>
-        </Card>
 
         {/* Action Buttons */}
         <Card className="p-6 bg-card/95 backdrop-blur-sm">
