@@ -89,8 +89,11 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
       }
     };
 
-    initializeGame();
-  }, [teams]);
+    // Only initialize once when game starts
+    if (!gameId) {
+      initializeGame();
+    }
+  }, []);
 
   const givePointToTeam = async (teamId: string) => {
     const updatedTeams = teams.map(team => 
