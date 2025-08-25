@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, RotateCcw, Home, Trophy, Plus } from "lucide-react";
+import { ArrowRight, Home, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -168,34 +168,6 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
     setCurrentQuestion(randomCapital);
   };
 
-  const resetGame = async () => {
-    const resetTeams = teams.map(team => ({ ...team, score: 0 }));
-    setTeams(resetTeams);
-    setReaderIndex(0);
-    setQuestionCount(0);
-    setShowReaderAnnouncement(true);
-
-    // Reset scores in database
-    if (gameId) {
-      try {
-        for (const team of teams) {
-          await supabase
-            .from('teams')
-            .update({ score: 0 })
-            .eq('game_id', gameId)
-            .eq('name', team.name);
-        }
-        
-        toast({
-          title: "Spelet återställt",
-          description: "Alla poäng har nollställts",
-        });
-      } catch (error) {
-        console.error('Error resetting game:', error);
-      }
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary via-primary-glow to-secondary flex items-center justify-center">
@@ -296,22 +268,13 @@ const CapitalsGame = ({ teams, setTeams, onBack, onHome }: CapitalsGameProps) =>
 
         {/* Action Buttons */}
         <Card className="p-6 bg-card/95 backdrop-blur-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               onClick={nextQuestion}
               className="h-12 bg-gradient-to-r from-primary to-primary-glow hover:from-primary-glow hover:to-primary font-semibold"
             >
               <ArrowRight className="w-5 h-5 mr-2" />
               Nästa fråga
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={resetGame}
-              className="h-12 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-            >
-              <RotateCcw className="w-5 h-5 mr-2" />
-              Återställ
             </Button>
             
             <Button

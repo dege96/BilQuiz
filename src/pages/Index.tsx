@@ -3,6 +3,7 @@ import HomePage from "@/components/HomePage";
 import CreateTeams from "@/components/CreateTeams";
 import GameMenu from "@/components/GameMenu";
 import CapitalsGame from "@/components/CapitalsGame";
+import PortableQuizGame from "@/components/PortableQuizGame";
 
 interface Team {
   id: string;
@@ -10,7 +11,7 @@ interface Team {
   score: number;
 }
 
-type GameState = 'home' | 'teams' | 'menu' | 'capitals';
+type GameState = 'home' | 'teams' | 'menu' | 'capitals' | 'portable-quiz';
 
 const Index = () => {
   const [gameState, setGameState] = useState<GameState>('home');
@@ -28,6 +29,9 @@ const Index = () => {
     if (gameType === 'capitals') {
       setGameState('capitals');
     }
+    if (gameType === 'portable-quiz') {
+      setGameState('portable-quiz');
+    }
   };
 
   const handleBackToHome = () => {
@@ -41,6 +45,10 @@ const Index = () => {
 
   const handleBackToMenu = () => {
     setGameState('menu');
+  };
+
+  const handleResetScores = () => {
+    setTeams((prev) => prev.map((t) => ({ ...t, score: 0 })));
   };
 
   switch (gameState) {
@@ -63,6 +71,7 @@ const Index = () => {
           teams={teams}
           onSelectGame={handleSelectGame}
           onBack={handleBackToTeams}
+          onResetScores={handleResetScores}
         />
       );
     
@@ -72,7 +81,17 @@ const Index = () => {
           teams={teams}
           setTeams={setTeams}
           onBack={handleBackToMenu}
-          onHome={handleBackToHome}
+          onHome={handleBackToMenu}
+        />
+      );
+
+    case 'portable-quiz':
+      return (
+        <PortableQuizGame
+          teams={teams}
+          setTeams={setTeams}
+          onBack={handleBackToMenu}
+          onHome={handleBackToMenu}
         />
       );
     
